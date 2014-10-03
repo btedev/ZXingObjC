@@ -24,6 +24,8 @@
 #import "ZXReader.h"
 #import "ZXResult.h"
 
+#define kScheduledTimerInterval 0.1
+
 @interface ZXCapture ()
 
 @property (nonatomic, strong) CALayer *binaryLayer;
@@ -40,6 +42,8 @@
 @property (nonatomic, strong) AVCaptureVideoDataOutput *output;
 @property (nonatomic, assign) BOOL running;
 @property (nonatomic, strong) AVCaptureSession *session;
+@property (nonatomic) NSTimer *scheduleAnalyzeTimer;
+@property (nonatomic) BOOL readyToAnalyze;
 
 @end
 
@@ -334,6 +338,23 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
     if (!self.captureToFilename && !self.luminanceLayer && !self.binaryLayer && !self.delegate) {
       return;
     }
+      
+      if (!self.scheduleAnalyzeTimer) {
+          self.readyToAnalyze = YES;
+          dispatch_async(dispatch_get_main_queue(), ^(void) {
+              self.scheduleAnalyzeTimer = [NSTimer scheduledTimerWithTimeInterval:kScheduledTimerInterval
+                                                                           target:self
+                                                                         selector:@selector(scheduledTimerTick)
+                                                                         userInfo:nil
+                                                                          repeats:YES];
+          });
+      }
+      
+      if (!self.readyToAnalyze) {
+          return;
+      } else {
+          self.readyToAnalyze = NO;
+      }
 
     CVImageBufferRef videoFrame = CMSampleBufferGetImageBuffer(sampleBuffer);
 
@@ -398,6 +419,10 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 }
 
 #pragma mark - Private
+
+- (void)scheduledTimerTick {
+    self.readyToAnalyze = YES;
+}
 
 // Adapted from http://blog.coriolis.ch/2009/09/04/arbitrary-rotation-of-a-cgimage/ and https://github.com/JanX2/CreateRotateWriteCGImage
 - (CGImageRef)createRotatedImage:(CGImageRef)original degrees:(float)degrees CF_RETURNS_RETAINED {
