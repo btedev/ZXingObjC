@@ -49,13 +49,14 @@
 
 @implementation ZXCapture
 
-- (ZXCapture *)init {
+- (instancetype)initWithHints:(ZXDecodeHints *)hints {
   if (self = [super init]) {
     _captureDeviceIndex = -1;
     _captureQueue = dispatch_queue_create("com.zxing.captureQueue", NULL);
     _focusMode = AVCaptureFocusModeContinuousAutoFocus;
     _hardStop = NO;
-    _hints = [ZXDecodeHints hints];
+    _hints = hints;
+      
     _lastScannedImage = NULL;
     _onScreen = NO;
     _orderInSkip = 0;
@@ -355,6 +356,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
       } else {
           self.readyToAnalyze = NO;
       }
+      //NSLog(@"analyzing");
 
     CVImageBufferRef videoFrame = CMSampleBufferGetImageBuffer(sampleBuffer);
 

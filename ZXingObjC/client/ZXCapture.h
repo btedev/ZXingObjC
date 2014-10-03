@@ -40,6 +40,8 @@
 @property (nonatomic, assign) BOOL torch;
 @property (nonatomic, assign) CGAffineTransform transform;
 
+- (instancetype)initWithHints:(ZXDecodeHints *)hints;
+
 - (int)back;
 - (int)front;
 - (BOOL)hasBack;
